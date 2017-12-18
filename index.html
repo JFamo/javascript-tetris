@@ -310,7 +310,7 @@
     function GetHoles(){
       var holes = 0;
       //for each column
-      for(var col = 0; col < 10; col++){
+      for(var col = 0; col < 11; col++){
         //for each row going up
         for(var row = 19; row >= 0; row--){
           //if this is empty
@@ -325,6 +325,7 @@
           }
         }
       }
+      console.log("HOLES : " + holes);
       return holes;
     }
 
