@@ -361,11 +361,11 @@
       vector_c = ( (data['firstScore'] / combinedScore) * first['vectorc'] ) + ( (data['secondScore'] / combinedScore) * second['vectorc'] );
       vector_d = ( (data['firstScore'] / combinedScore) * first['vectord'] ) + ( (data['secondScore'] / combinedScore) * second['vectord'] );
       var doMutation = Math.random();
-      if(doMutation <= 0.5){
-        vector_a += Math.random() - 0.5;
-        vector_b += Math.random() - 0.5;
-        vector_c += Math.random() - 0.5;
-        vector_d += Math.random() - 0.5;
+      if(doMutation <= 0.2){
+        vector_a += (Math.random() - 0.5)/2;
+        vector_b += (Math.random() - 0.5)/2;
+        vector_c += (Math.random() - 0.5)/2;
+        vector_d += (Math.random() - 0.5)/2;
       }
       console.log("Created Individual with VectorA " + vector_a + " Vector B " + vector_b + " Vector C " + vector_c + " Vector D " + vector_d );
     }
@@ -379,7 +379,6 @@
       thisIndividual['score'] = score;
       population[populationID] = thisIndividual;
       populationID++;
-      console.log("Saved Individual with Score " + score + " VectorA " + vector_a + " Vector B " + vector_b + " Vector C " + vector_c + " Vector D " + vector_d );
     }
 
     function getFittest(){
