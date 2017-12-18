@@ -79,7 +79,7 @@
         nx      = 10, // width of tetris court (in blocks)
         ny      = 20, // height of tetris court (in blocks)
         nu      = 5,  // width/height of upcoming preview (in blocks)
-        populationID = 3;  // track the ID of the current population member, to increment
+        populationID = 2;  // track the ID of the current population member, to increment
 
     //-------------------------------------------------------------------------
     // game variables (initialized during reset)
@@ -348,9 +348,8 @@
     // JONATHAN GENETIC ALGORITHM
     //-------------------------------------------------------------------------
     var population = [];
-    population[0] = {'score':500, 'vectora':-1, 'vectorb':1, 'vectorc':-1, 'vectord':-1};
-    population[1] = {'score':80, 'vectora':1, 'vectorb':1, 'vectorc':1, 'vectord':1};
-    population[2] = {'score':1000, 'vectora':-0.51, 'vectorb':0.76, 'vectorc':-0.36, 'vectord':-0.18};
+    population[0] = {'score':1, 'vectora':(Math.random()*4)-2, 'vectorb':(Math.random()*2)-1, 'vectorc':-(Math.random()*2)-1, 'vectord':-(Math.random()*2)-1};
+    population[1] = {'score':1, 'vectora':(Math.random()*2)-1, 'vectorb':(Math.random()*2)-1, 'vectorc':(Math.random()*2)-1, 'vectord':(Math.random()*2)-1};
 
     function newIndividual(){
       var data = getFittest();
