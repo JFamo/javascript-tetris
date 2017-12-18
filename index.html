@@ -86,6 +86,7 @@
 
     var dx, dy,        // pixel size of a single tetris block
         blocks,        // 2 dimensional array (nx*ny) representing tetris court - either empty block or occupied by a 'piece'
+        fakeblocks,    // identical to blocks, but isn't actually updated to the screen
         actions,       // queue of user actions (inputs)
         playing,       // true|false - game is in progress
         dt,            // time since starting this game
@@ -94,7 +95,12 @@
         score,         // the current score
         vscore,        // the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
         rows,          // number of completed rows in the current game
-        step;          // how long before current piece drops by 1 row
+        step,          // how long before current piece drops by 1 row
+        vector_a = -0.5,      // heuristic for aggregate height
+        vector_b = 0.75,      // heuristic for complete lines
+        vector_c = -0.5,      // heuristic for holes
+        vector_d = -0.2;      // heuristic for bumpiness
+
 
     //-------------------------------------------------------------------------
     // tetris pieces
@@ -153,6 +159,19 @@
       return !occupied(type, x, y, dir);
     }
 
+    function fakeOccupied(type, x, y, dir) {
+      var result = false
+      eachblock(type, x, y, dir, function(x, y) {
+        if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getFakeBlock(x,y))
+          result = true;
+      });
+      return result;
+    }
+
+    function fakeUnoccupied(type, x, y, dir) {
+      return !fakeOccupied(type, x, y, dir);
+    }
+
     //-----------------------------------------
     // start with 4 instances of each piece and
     // pick randomly until the 'bag is empty'
@@ -165,6 +184,169 @@
       return { type: type, dir: DIR.UP, x: Math.round(random(0, nx - type.size)), y: 0 };
     }
 
+    //-------------------------------------------------------------------------
+    // JONATHAN
+    //-------------------------------------------------------------------------
+
+    var bestMoveScore = -1000;
+    var bestMoveChange = 0;
+    var bestMoveDir = 0;
+
+    function findMove(){
+      bestMoveScore = -1000;
+      bestMoveChange = 0;
+      bestMoveDir = 0;
+      //for each column
+      for(var possible_col = 0; possible_col < 11; possible_col++){
+        //for each rotation
+        for(var possible_rot = 0; possible_rot < 4; possible_rot++){
+          //if this is a possible move
+          if(unoccupied(current.type, possible_col, lowestPoint(current.type, possible_col, possible_rot), possible_rot)){
+            var thisScore = 0;
+            //create a temporary false grid
+            fakeblocks = JSON.parse(JSON.stringify(blocks))
+            //save exactly where I'm creating the false piece
+            var old_piece_type = current.type;
+            var old_piece_x = current.x;
+            var old_piece_y = current.y;
+            var old_piece_dir = current.dir;
+            var old_piece_lp = fakeLowestPoint(old_piece_type, possible_col, possible_rot);
+            //remove the current piece from its falling position
+            eachblock(old_piece_type, old_piece_x, old_piece_y, old_piece_dir, function(x, y) {
+              setFakeBlock(x, y, null);
+            });
+            //place the current piece where it will lay
+            eachblock(old_piece_type, old_piece_x, old_piece_lp, old_piece_dir, function(x, y) {
+              setFakeBlock(x, y, old_piece_type);
+            });
+            //calculate score of this move
+            thisScore = (vector_a * GetAggregateHeight()) + (vector_b * GetCompleteLines()) + (vector_c * GetHoles()) + (vector_d * GetBumpiness());
+            //if this is the best one, update the stats
+            if(thisScore > bestMoveScore){
+              bestMoveScore = thisScore;
+              bestMoveChange = possible_col - current.x;
+              bestMoveDir = possible_rot;
+              console.log("Best Move Score : " + bestMoveScore);
+            }
+          }
+        }
+      }
+      /**
+      //revert to actual situation
+      eachblock(old_piece_type, old_piece_x, old_piece_y, old_piece_dir, function(x, y) {
+        setFakeBlock(x, y, old_piece_type);
+      });
+      eachblock(old_piece_type, old_piece_x, old_piece_lp, old_piece_dir, function(x, y) {
+        setFakeBlock(x, y, null);
+      });
+      **/
+    }
+
+    function makeMove(){
+      //make the best move
+      if(bestMoveChange == 0){
+        move(DIR.DOWN);
+      }
+      if(bestMoveChange > 0){
+        for(var count = 0; count < bestMoveChange; count ++){
+          move(DIR.RIGHT);
+          bestMoveChange --;
+        }
+      }
+      if(bestMoveChange < 0){
+        for(var count = 0; count < Math.abs(bestMoveChange); count ++){
+          move(DIR.LEFT);
+          bestMoveChange ++;
+        }
+      }
+      if(current.dir != bestMoveDir){
+        rotate();
+      }
+    }
+
+    function GetColHeight(col){
+      var h = 0;
+      //for each row, height
+        for(var row = 0; row < 20; row++){
+          if(getFakeBlock(col, row) != null){
+            h += 1;
+          }
+        }
+      return h;
+    }
+
+    function GetAggregateHeight(){
+      var agg_height = 0;
+      //for each column
+      for(var col = 0; col < 11; col++){
+        agg_height += GetColHeight(col);
+      }
+      return agg_height;
+    }
+
+    function GetCompleteLines(){
+      var complete_lines = 0;
+      //for each row
+      for(var row = 0; row < 20; row++){
+        var comp_cols = 0;
+        //for each column
+        for(var col = 0; col < 11; col++){
+          if(getFakeBlock(col, row) != null){
+            comp_cols += 1;
+          }
+        }
+        if(comp_cols == 11){
+          complete_lines += 1;
+        }
+      }
+      return complete_lines;
+    }
+
+    function GetBumpiness(){
+      var bumpiness = 0;
+      //for each column
+      for(var col = 0; col < 10; col++){
+        bumpiness += Math.abs( GetColHeight(col) - GetColHeight(col+1) );
+      }
+      return bumpiness;
+    }
+
+    function GetHoles(){
+      var holes = 0;
+      //for each column
+      for(var col = 0; col < 10; col++){
+        //for each row going up
+        for(var row = 19; row >= 0; row--){
+          //if this is empty
+          if(getFakeBlock(col, row) == null){
+            //for each row above this
+            for(var row2 = row; row2 >= 0; row2--){
+              //if a cell above me is NOT empty
+              if(getFakeBlock(col, row2) != null){
+                holes ++;
+              }
+            }
+          }
+        }
+      }
+      return holes;
+    }
+
+    function lowestPoint(type, col, rot){
+      var lowY = 0;
+      while(unoccupied(type, col, lowY, rot)){
+        lowY += 1;
+      }
+      return lowY - 1;
+    }
+
+    function fakeLowestPoint(type, col, rot){
+      var lowY = 0;
+      while(fakeUnoccupied(type, col, lowY, rot)){
+        lowY += 1;
+      }
+      return (lowY - 1);
+    }
 
     //-------------------------------------------------------------------------
     // GAME LOOP
@@ -236,7 +418,7 @@
     //-------------------------------------------------------------------------
 
     function play() { hide('start'); reset();          playing = true;  }
-    function lose() { show('start'); setVisualScore(); playing = false; }
+    function lose() { show('start'); setVisualScore(); playing = false; play(); }
 
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
     function setScore(n)            { score = n; setVisualScore(n);  }
@@ -247,6 +429,8 @@
     function addRows(n)             { setRows(rows + n); }
     function getBlock(x,y)          { return (blocks && blocks[x] ? blocks[x][y] : null); }
     function setBlock(x,y,type)     { blocks[x] = blocks[x] || []; blocks[x][y] = type; invalidate(); }
+    function setFakeBlock(x,y,type) { fakeblocks[x] = fakeblocks[x] || []; fakeblocks[x][y] = type; }
+    function getFakeBlock(x,y)      { return (fakeblocks && fakeblocks[x] ? fakeblocks[x][y] : null); }
     function clearBlocks()          { blocks = []; invalidate(); }
     function clearActions()         { actions = []; }
     function setCurrentPiece(piece) { current = piece || randomPiece(); invalidate();     }
@@ -266,6 +450,7 @@
       if (playing) {
         if (vscore < score)
           setVisualScore(vscore + 1);
+        makeMove();
         handle(actions.shift());
         dt = dt + idt;
         if (dt > step) {
@@ -320,6 +505,9 @@
         clearActions();
         if (occupied(current.type, current.x, current.y, current.dir)) {
           lose();
+        }
+        else{
+          findMove();
         }
       }
     }
