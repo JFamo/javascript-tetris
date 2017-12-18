@@ -348,7 +348,7 @@
     // JONATHAN GENETIC ALGORITHM
     //-------------------------------------------------------------------------
     var population = [];
-    population[0] = {'score':500, 'vectora':-5, 'vectorb':-5, 'vectorc':-5, 'vectord':-5};
+    population[0] = {'score':500, 'vectora':-5, 'vectorb':5, 'vectorc':-5, 'vectord':-5};
     population[1] = {'score':80, 'vectora':5, 'vectorb':5, 'vectorc':5, 'vectord':5};
 
     function newIndividual(){
@@ -360,6 +360,13 @@
       vector_b = ( (data['firstScore'] / combinedScore) * first['vectorb'] ) + ( (data['secondScore'] / combinedScore) * second['vectorb'] );
       vector_c = ( (data['firstScore'] / combinedScore) * first['vectorc'] ) + ( (data['secondScore'] / combinedScore) * second['vectorc'] );
       vector_d = ( (data['firstScore'] / combinedScore) * first['vectord'] ) + ( (data['secondScore'] / combinedScore) * second['vectord'] );
+      var doMutation = Math.random();
+      if(doMutation <= 0.5){
+        vector_a += Math.random() - 0.5;
+        vector_b += Math.random() - 0.5;
+        vector_c += Math.random() - 0.5;
+        vector_d += Math.random() - 0.5;
+      }
       console.log("Created Individual with VectorA " + vector_a + " Vector B " + vector_b + " Vector C " + vector_c + " Vector D " + vector_d );
     }
 
