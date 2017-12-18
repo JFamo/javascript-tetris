@@ -78,7 +78,8 @@
         speed   = { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
         nx      = 10, // width of tetris court (in blocks)
         ny      = 20, // height of tetris court (in blocks)
-        nu      = 5;  // width/height of upcoming preview (in blocks)
+        nu      = 5,  // width/height of upcoming preview (in blocks)
+        populationID = 2;  // track the ID of the current population member, to increment
 
     //-------------------------------------------------------------------------
     // game variables (initialized during reset)
@@ -96,10 +97,10 @@
         vscore,        // the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
         rows,          // number of completed rows in the current game
         step,          // how long before current piece drops by 1 row
-        vector_a = -0.1,      // heuristic for aggregate height
-        vector_b = 0.75,      // heuristic for complete lines
-        vector_c = -5.0,      // heuristic for holes
-        vector_d = -0.1;      // heuristic for bumpiness
+        vector_a = 5,      // heuristic for aggregate height
+        vector_b = 5,      // heuristic for complete lines
+        vector_c = 5,      // heuristic for holes
+        vector_d = 5;      // heuristic for bumpiness
 
 
     //-------------------------------------------------------------------------
@@ -185,7 +186,7 @@
     }
 
     //-------------------------------------------------------------------------
-    // JONATHAN
+    // JONATHAN GAMEPLAY
     //-------------------------------------------------------------------------
 
     var bestMoveScore = -1000;
@@ -193,7 +194,7 @@
     var bestMoveDir = 0;
 
     function findMove(){
-      bestMoveScore = -1000;
+      bestMoveScore = -100000;
       bestMoveChange = 0;
       bestMoveDir = 0;
       //for each column
@@ -216,7 +217,7 @@
               setFakeBlock(x, y, null);
             });
             //place the current piece where it will lay
-            eachblock(old_piece_type, old_piece_x, old_piece_lp, old_piece_dir, function(x, y) {
+            eachblock(old_piece_type, possible_col, old_piece_lp, possible_rot, function(x, y) {
               setFakeBlock(x, y, old_piece_type);
             });
             //calculate score of this move
@@ -226,7 +227,6 @@
               bestMoveScore = thisScore;
               bestMoveChange = possible_col - current.x;
               bestMoveDir = possible_rot;
-              console.log("Best Move Score : " + bestMoveScore);
             }
           }
         }
@@ -325,7 +325,6 @@
           }
         }
       }
-      console.log("HOLES : " + holes);
       return holes;
     }
 
@@ -343,6 +342,71 @@
         lowY += 1;
       }
       return (lowY - 1);
+    }
+
+    //-------------------------------------------------------------------------
+    // JONATHAN GENETIC ALGORITHM
+    //-------------------------------------------------------------------------
+    var population = [];
+    population[0] = {'score':500, 'vectora':-5, 'vectorb':-5, 'vectorc':-5, 'vectord':-5};
+    population[1] = {'score':80, 'vectora':5, 'vectorb':5, 'vectorc':5, 'vectord':5};
+
+    function newIndividual(){
+      var data = getFittest();
+      var combinedScore = data['firstScore'] + data['secondScore'];
+      var first = data['first'];
+      var second = data['second'];
+      vector_a = ( (data['firstScore'] / combinedScore) * first['vectora'] ) + ( (data['secondScore'] / combinedScore) * second['vectora'] );
+      vector_b = ( (data['firstScore'] / combinedScore) * first['vectorb'] ) + ( (data['secondScore'] / combinedScore) * second['vectorb'] );
+      vector_c = ( (data['firstScore'] / combinedScore) * first['vectorc'] ) + ( (data['secondScore'] / combinedScore) * second['vectorc'] );
+      vector_d = ( (data['firstScore'] / combinedScore) * first['vectord'] ) + ( (data['secondScore'] / combinedScore) * second['vectord'] );
+      console.log("Created Individual with VectorA " + vector_a + " Vector B " + vector_b + " Vector C " + vector_c + " Vector D " + vector_d );
+    }
+
+    function saveIndividual(){
+      var thisIndividual = {};
+      thisIndividual['vectora'] = vector_a;
+      thisIndividual['vectorb'] = vector_b;
+      thisIndividual['vectorc'] = vector_c;
+      thisIndividual['vectord'] = vector_d;
+      thisIndividual['score'] = score;
+      population[populationID] = thisIndividual;
+      populationID++;
+      console.log("Saved Individual with Score " + score + " VectorA " + vector_a + " Vector B " + vector_b + " Vector C " + vector_c + " Vector D " + vector_d );
+    }
+
+    function getFittest(){
+      var mostFit;
+      var secondFit;
+      var highScore = 0;
+      var secondScore = 0;
+      //for each individual
+      for(var individualID in population){
+        var individual = population[individualID];
+        //if there is a score for this individual
+        if(individual.hasOwnProperty('score')){
+          //if I am the highest score so far
+          if(individual['score'] > highScore){
+            //if there is already someone here, bump them down to second
+            if(highScore > 0){
+              secondFit = Object.assign({}, mostFit);
+              secondScore = highScore;
+            }
+            mostFit = Object.assign({}, individual);
+            highScore = individual['score'];
+          }
+          //if not, maybe I'm the second highest score so far...
+          else{
+            if(individual['score'] > secondScore){
+              secondFit = Object.assign({}, individual);
+              secondScore = individual['score'];
+            }
+          }
+        } 
+      }
+      //create a temp object to return lots of variables
+      var returnData = {'first':mostFit, 'second':secondFit, 'firstScore':highScore, 'secondScore':secondScore};
+      return returnData;
     }
 
     //-------------------------------------------------------------------------
@@ -414,8 +478,8 @@
     // GAME LOGIC
     //-------------------------------------------------------------------------
 
-    function play() { hide('start'); reset();          playing = true;  }
-    function lose() { show('start'); setVisualScore(); playing = false; play(); }
+    function play() { newIndividual(); hide('start'); reset();          playing = true;  }
+    function lose() { saveIndividual(); show('start'); setVisualScore(); playing = false; play(); }
 
     function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
     function setScore(n)            { score = n; setVisualScore(n);  }
