@@ -96,10 +96,10 @@
         vscore,        // the currently displayed score (it catches up to score in small chunks - like a spinning slot machine)
         rows,          // number of completed rows in the current game
         step,          // how long before current piece drops by 1 row
-        vector_a = -0.5,      // heuristic for aggregate height
+        vector_a = -0.1,      // heuristic for aggregate height
         vector_b = 0.75,      // heuristic for complete lines
-        vector_c = -0.5,      // heuristic for holes
-        vector_d = -0.2;      // heuristic for bumpiness
+        vector_c = -0.8,      // heuristic for holes
+        vector_d = -0.1;      // heuristic for bumpiness
 
 
     //-------------------------------------------------------------------------
