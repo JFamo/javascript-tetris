@@ -248,16 +248,12 @@
         move(DIR.DOWN);
       }
       if(bestMoveChange > 0){
-        for(var count = 0; count < bestMoveChange; count ++){
           move(DIR.RIGHT);
           bestMoveChange --;
-        }
       }
       if(bestMoveChange < 0){
-        for(var count = 0; count < Math.abs(bestMoveChange); count ++){
-          move(DIR.LEFT);
-          bestMoveChange ++;
-        }
+        move(DIR.LEFT);
+        bestMoveChange ++;
       }
       if(current.dir != bestMoveDir){
         rotate();
