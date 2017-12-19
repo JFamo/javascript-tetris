@@ -207,7 +207,7 @@
           //if this is a possible move
           if(unoccupied(current.type, possible_col, lowestPoint(current.type, possible_col, possible_rot), possible_rot)){
             //for each column
-            for(var possible_col2 = 0; possible_col2 < 10; possible_col2++){
+            for(var possible_col2 = -1; possible_col2 < 10; possible_col2++){
               //for each rotation
               for(var possible_rot2 = 0; possible_rot2 < 4; possible_rot2++){
                 //if this is a possible move
@@ -228,7 +228,7 @@
                     setFakeBlock(x, y, next.type);
                   });
                   //calculate score of this move
-                  thisScore = (vector_a * GetAggregateHeight()) + (vector_b * GetCompleteLines()) + (vector_c * GetHoles()) + (vector_d * GetBumpiness());
+                  thisScore = ((vector_a * (GetAggregateHeight()/100)) * GetAggregateHeight()) + (vector_b * GetCompleteLines()) + (vector_c * GetHoles()) + (vector_d * GetBumpiness());
                   //if this is the best one, update the stats
                   if(thisScore > bestMoveScore){
                     bestMoveScore = thisScore;
@@ -304,7 +304,7 @@
     function GetBumpiness(){
       var bumpiness = 0;
       //for each column
-      for(var col = 0; col < 9; col++){
+      for(var col = -1; col < 9; col++){
         bumpiness += Math.abs( GetColHeight(col) - GetColHeight(col+1) );
       }
       return bumpiness;
