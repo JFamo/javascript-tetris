@@ -201,7 +201,7 @@
       bestMoveChange = 0;
       bestMoveDir = 0;
       //for each column
-      for(var possible_col = 0; possible_col < 10; possible_col++){
+      for(var possible_col = -1; possible_col < 10; possible_col++){
         //for each rotation
         for(var possible_rot = 0; possible_rot < 4; possible_rot++){
           //if this is a possible move
@@ -245,8 +245,8 @@
 
     function makeMove(){
       //make the best move
-      if(bestMoveChange == 0){
-        move(DIR.DOWN);
+      if(current.dir != bestMoveDir){
+        rotate();
       }
       if(bestMoveChange > 0){
           move(DIR.RIGHT);
@@ -256,8 +256,8 @@
         move(DIR.LEFT);
         bestMoveChange ++;
       }
-      if(current.dir != bestMoveDir){
-        rotate();
+      if(bestMoveChange == 0){
+        move(DIR.DOWN);
       }
     }
 
