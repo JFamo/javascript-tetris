@@ -15,6 +15,7 @@
     #score    { font-family: 'Press Start 2P', cursive; color: red; font-weight: bold; vertical-align: middle; }
     #highscore{ font-family: 'Press Start 2P', cursive; color: red; font-weight: bold; vertical-align: middle; }
     #rows     { font-family: 'Press Start 2P', cursive; color: blue; font-weight: bold; vertical-align: middle; }
+    #level     { font-family: 'Press Start 2P', cursive; color: blue; font-weight: bold; vertical-align: middle; }
     #lines    { font-family: 'Press Start 2P', cursive; color: green; font-weight: bold; vertical-align: middle; }
     #show     { font-family: 'Press Start 2P', cursive; cursor:pointer; color: blue; font-size:14px; vertical-align: middle; }
     #details  { font-family: 'Press Start 2P', cursive; display:none; color: black; font-size:8px; vertical-align: middle; }
@@ -38,6 +39,7 @@
       <p>Score <span id="score">00000</span></p>
       <p>Highscore <span id="highscore">00000</span></p>
       <p>Rows <span id="rows">0</span></p>
+      <p>Level <span id="level">1</span></p>
       <p><span id="lines"></span></p>
       <br>
       <p><span id="show" onclick="showMore();">Show More</span></p>
@@ -111,7 +113,8 @@
         vector_a = 5,      // heuristic for aggregate height
         vector_b = 5,      // heuristic for complete lines
         vector_c = 5,      // heuristic for holes
-        vector_d = 5;      // heuristic for bumpiness
+        vector_d = 5,      // heuristic for bumpiness
+        level = 1;        //for nullpo scoring
 
 
     //-------------------------------------------------------------------------
@@ -522,6 +525,7 @@
 
     function reset() {
       dt = 0;
+      level = 0;
       clearActions();
       clearBlocks();
       clearRows();
@@ -618,19 +622,23 @@
       }
       if (n > 0) {
         addRows(n);
-        addScore(100*Math.pow(2,n-1)); // 1: 100, 2: 200, 3: 400, 4: 800
+        //do level increments
+        level = Math.floor(rows/15) + 1;
+        drawLevel();
+        var inc = level*(100*Math.pow(2,n-1));
+        addScore(inc); // 1: 100, 2: 200, 3: 400, 4: 800
         switch(100*Math.pow(2,n-1)){
           case 100:
-            drawLineComplete("Single! +100");
+            drawLineComplete("Single! +" + inc);
             break;
           case 200:
-            drawLineComplete("Double! +200");
+            drawLineComplete("Double! +" + inc);
             break;
           case 400:
-            drawLineComplete("Triple! +400");
+            drawLineComplete("Triple! +" + inc);
             break;
           case 800:
-            drawLineComplete("Tetris! +800");
+            drawLineComplete("Tetris! +" + inc);
             break;
         }
       }
@@ -698,10 +706,7 @@
     }
 
     function drawScore() {
-      if (invalid.score) {
-        html('score', ("00000" + Math.floor(vscore)).slice(-5));
-        invalid.score = false;
-      }
+        html('score', ("00000" + Math.floor(score)).slice(-5));
     }
 
     function drawHighScore() {
@@ -711,6 +716,10 @@
 
     function drawLineComplete(word) {
         html('lines', word);
+    }
+
+    function drawLevel() {
+        html('level', level);
     }
 
     function drawRows() {
