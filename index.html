@@ -36,8 +36,8 @@
     <div id="menu">
       <p id="start"><a href="javascript:play();">Press Space to Play.</a></p>
       <p><canvas id="upcoming"></canvas></p>
-      <p>Score <span id="score">00000</span></p>
-      <p>Highscore <span id="highscore">00000</span></p>
+      <p>Score <span id="score">0000000</span></p>
+      <p>Highscore <span id="highscore">0000000</span></p>
       <p>Rows <span id="rows">0</span></p>
       <p>Level <span id="level">1</span></p>
       <p><span id="lines"></span></p>
@@ -87,7 +87,7 @@
         ctx     = canvas.getContext('2d'),
         ucanvas = get('upcoming'),
         uctx    = ucanvas.getContext('2d'),
-        speed   = { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
+        speed   = { start: 0.6, decrement: 0.005, min: 0.005 }, // how long before piece drops by 1 row (seconds)
         nx      = 10, // width of tetris court (in blocks)
         ny      = 20, // height of tetris court (in blocks)
         nu      = 5,  // width/height of upcoming preview (in blocks)
@@ -538,6 +538,9 @@
       if (playing) {
         if (vscore < score)
           setVisualScore(vscore + 1);
+        if(score > highScore){
+          drawHighScore()
+        }
         makeMove();
         handle(actions.shift());
         dt = dt + idt;
@@ -706,11 +709,11 @@
     }
 
     function drawScore() {
-        html('score', ("00000" + Math.floor(score)).slice(-5));
+        html('score', ("0000000" + Math.floor(score)).slice(-7));
     }
 
     function drawHighScore() {
-        html('highscore', ("00000" + Math.floor(score)).slice(-5));
+        html('highscore', ("0000000" + Math.floor(score)).slice(-7));
         highScore = score;
     }
 
