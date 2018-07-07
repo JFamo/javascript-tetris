@@ -1,23 +1,14 @@
 Javascript Tetris
 =================
 
-An HTML5 Tetris Game
+An Artificial Intelligence (named KHAN) who plays Tetris. Very well.
 
- * [play the game](http://codeincomplete.com/projects/tetris/)
- * read a [blog article](http://codeincomplete.com/posts/2011/10/10/javascript_tetris/)
+ * [launch KHAN](https://megastardaboss.github.io/javascript-tetris/)
+ * [play the source game](http://codeincomplete.com/projects/tetris/)
+ * more about Khan on [my website](http://schwastuff.me/khan.html)
  * view the [source](https://github.com/jakesgordon/javascript-tetris)
 
 >> _*SUPPORTED BROWSERS*: Chrome, Firefox, Safari, Opera and IE9+_
-
-FUTURE
-======
-
- * menu
- * animation and fx
- * levels
- * high scores
- * touch support
- * music and sound fx
 
 
 License
